@@ -1,5 +1,7 @@
 import sqlite3
 
+from sqlalchemy import create_engine
+
 class GoalsDb(object):
 	"""
 	Database of goals.
