@@ -21,7 +21,7 @@ class TestEmptyDatabase(unittest.TestCase):
 		
 		# Pre
 		remove_file(self.filepath)
-		self.db = GoalsDb(name, self.filepath)
+		self.db = GoalsDb(name, self.filepath)	
 	
 	def test_create_db(self):
 		"""
@@ -33,11 +33,11 @@ class TestEmptyDatabase(unittest.TestCase):
 		"""
 		Tests addition of a single goal to the database.
 		"""
-		goal = "Have 1M in savings."
-		goaldata = (goal, "Finance")
-		self.db.add_goal(goaldata)
+		goal = Goal(goal="Have 1M in savings.",
+				category="Finance")
+		self.db.add_goal(goal)
 		
-		self.assertTrue(self.db.is_contains_goal(goal))
+		self.assertTrue(self.db.is_contains_goal(goal.goal))
 		
 	def test_add_multiple_goals(self):
 		"""
@@ -46,14 +46,15 @@ class TestEmptyDatabase(unittest.TestCase):
 		goal1 = "Have 1M in savings."
 		goal2 = "Have 2M in savings."
 		goal3 = "Eat healthier."
-		goaldata1 = (goal1, "Finance")
-		goaldata2 = (goal2, "Finance")
-		goaldata3 = (goal3, "Health")
+		
+		goaldata1 = Goal(goal=goal1, category="Finance")
+		goaldata2 = Goal(goal=goal2, category="Finance")
+		goaldata3 = Goal(goal=goal3, category="Health")
 		
 		goals_to_add = [goaldata1, goaldata2, goaldata3]
 		self.db.add_goal(goals_to_add)
 		
-		self.assertTrue(self.db.is_contains_goal(goal2))
+		self.assertTrue(self.db.is_contains_goal(goaldata2.goal))
 		
 class TestNonEmptyDatabase(unittest.TestCase):
 	"""
@@ -76,28 +77,36 @@ class TestNonEmptyDatabase(unittest.TestCase):
 		make_backup(self.filepath)
 		self.db = GoalsDb(name, self.filepath)
 		
-	def get_first_goaldata(self):
-		query = f"SELECT * FROM {self.db.name} LIMIT 1"
-		self.db.cursor.execute(query)
-		return self.db.cursor.fetchone()
+	def get_first_goal(self):
+		"""
+		Retrieves the first goal object from the database.
 		
-	def test_get_first_goaldata(self):
-		self.assertIsNotNone(self.get_first_goaldata())
+		Returns:	First goal object from the database.
+		"""
+		return self.db.session.query(Goal)[0]
+		
+	def test_get_first_goal(self):
+		"""
+		Tests that the goal retrieval works.
+		"""
+		self.assertIsNotNone(self.get_first_goal())
 		
 	def test_add_duplicate_goal(self):
-		duplicate_data = self.get_first_goaldata()
-		goal, cat, _ = duplicate_data
+		"""
+		Tests adding a duplicate goal to the database.
+		"""
+		to_duplicate = self.get_first_goal()		
 		
-		self.db.add_goal((goal, cat))
-		self.assertTrue(self.db.is_contains_goal(goal))
+		duplicate = Goal(goal=to_duplicate.goal,
+						category="Random")
+		self.db.add_goal(duplicate)
+		self.assertTrue(self.db.is_contains_goal(duplicate.goal))
 		
 	def test_query_category(self):
-		_, category, _ = self.get_first_goaldata()
-		
-		result = self.db.query_cat(category)
+		goal_obj = self.get_first_goal()
+		result = self.db.query_cat(goal_obj.category)
 		self.assertIsNotNone(result)
 	
-		
 	@classmethod
 	def tearDownClass(self):
 		"""
@@ -105,20 +114,19 @@ class TestNonEmptyDatabase(unittest.TestCase):
 		"""
 		restore_backup(self.filepath)
 
-
 class TestTasks(TestNonEmptyDatabase):
 	"""
 	Tests the functionality of the Tasks class,
 	using a non-empty database as a starting point.
 	"""
 	
-	@classmethod
+	@classmethod 
 	def setUpClass(self):
 		super().setUpClass()	
 		
 	def test_define_task(self):
-		goal, category, _ = self.get_first_goaldata()
-		task = Tasks(goal)
+		goal = self.get_first_goal()
+		task = Tasks(goal.goal)
 		t1 = task.add("Start saving up.")
 		t2 = task.add("Invest.")
 		
@@ -126,6 +134,9 @@ class TestTasks(TestNonEmptyDatabase):
 		
 		print()
 		task.print()
+		
+	def test_add_task_to_goal(self):
+		pass
 		
 	@classmethod
 	def tearDownClass(self):
@@ -137,8 +148,8 @@ if __name__ == '__main__':
 	# unittest.main()	
 	
 	suite = unittest.TestSuite()
-	addtests(suite, TestEmptyDatabase)
-	addtests(suite, TestNonEmptyDatabase)
+	# addtests(suite, TestEmptyDatabase)
+	# addtests(suite, TestNonEmptyDatabase)
 	addtests(suite, TestTasks)
 	
 	runner = unittest.TextTestRunner(verbosity=2)

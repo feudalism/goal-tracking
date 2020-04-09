@@ -1,6 +1,7 @@
 import sqlite3
+from itertools import compress
 
-from sqlalchemy import create_engine
+from models import *
 
 class GoalsDb(object):
 	"""
@@ -9,12 +10,16 @@ class GoalsDb(object):
 	
 	def __init__(self, name, filepath):
 		"""
-		Creates an database file with an empty table.
+		Creates an database file with an empty table,
+		if the database at the filepath doesn't currently exist.
+		Also creates a database session.
 		"""
 		self.name = name
 		self.filepath = filepath
 		self.connection = sqlite3.connect(self.filepath)
 		self.cursor = self.connection.cursor()
+		
+		self.session = self.get_session()
 		
 		self.create_table()
 		self.save()
@@ -22,21 +27,35 @@ class GoalsDb(object):
 		
 	def __del__(self):
 		"""
-		Closes the cursor and connection before shutdown.
+		Closes the cursor, connection and session
+		before shutdown.
 		"""
 		self.cursor.close()
 		self.connection.close()
+		self.session.close()
 		print("Database closed.")
 		
+	def get_session(self):
+		"""
+		Returns the database session.
+		
+		Returns: Session object
+		"""
+		URI = 'sqlite:///' + self.filepath
+		engine = create_engine(URI, echo=False)	
+		
+		Session = sessionmaker(bind=engine)
+		return Session()
+	
 	def save(self):
 		"""
 		Saves changes made to the database.
 		"""
-		self.connection.commit()
+		self.session.commit()
 		
 	def create_table(self):
 		"""
-		Creates an empty table.
+		Creates an empty table for a new database.
 		"""
 		query = f"""CREATE TABLE IF NOT EXISTS {self.name}
 			(goal TEXT PRIMARY KEY,
@@ -44,32 +63,66 @@ class GoalsDb(object):
 			tasks BLOB)"""
 		self.cursor.execute(query)
 		
-	def add_goal(self, data):
+	def add_goal(self, goal):
 		"""
 		Adds either a single row or multiple rows of data
-		(goal, category) to the database.
-		"""
-		query = f"INSERT OR IGNORE INTO {self.name} (goal, category) VALUES(?, ?)"
+		(goal object) to the database and saves.
 		
-		if isinstance(data[0], tuple):
-			self.cursor.executemany(query, data)
+		Params:	goal
+				- Goal object of the goal to be added
+				- Can either be a single goal object or a list
+					of goal objects
+		"""		
+		
+		# if self.is_duplicate(goal):
+			# print("Duplicate.")
+		# else:
+		
+		if isinstance(goal, list):
+			self.add_multi_goal(goal)
 		else:
-			self.cursor.execute(query, data)
+			self.add_one_goal(goal)
 		self.save()
+			
+	def add_one_goal(self, goal):
+		"""
+		Adds a single row of data
+		(goal object) to the database if it is not a duplicate.
+		
+		Params:	Goal object of the goal to be added
+		"""		
+		if self.is_contains_goal(goal.goal):
+			print("Duplicate.")
+		else:
+			self.session.add(goal)
+			
+	def add_multi_goal(self, goals):
+		"""
+		Adds a multiple rows of data
+		(goal objects) to the database, filtering
+		out duplicates.
+		
+		Params:	List of goal objects to be added
+		"""		
+		dupl_array = [self.is_contains_goal(g.goal) for g in goals]
+		do_add = [not i for i in dupl_array]
+		
+		unique_goals = [g for i, g in enumerate(goals) if do_add[i]]		
+		self.session.add_all(unique_goals)
 		
 	def is_contains_goal(self, goal):
 		"""
 		Checks whether the goal is already within the database.
-		"""
-		query = f"SELECT goal FROM {self.name} where goal=?"
-		t = (goal,)
-		self.cursor.execute(query, t)
 		
-		result = self.cursor.fetchall()
-		assert(len(result) == 1)
+		Params:	goal	String of the goal to be added.
+
+		Returns: True if goal is already in the database,
+				 False otherwise.
+		"""
+		result = [g.goal for g in self.session.query(Goal).\
+				filter_by(goal=goal)]
 		
 		if result:
-			print(f"Goal \'{goal}\' is already inside the database.")
 			return True
 		else:
 			return False
@@ -77,20 +130,12 @@ class GoalsDb(object):
 	def query_cat(self, category):
 		""""
 		Queries the goals under the requested category.
+		
+		Params: 	category	Category string
+		
+		Returns:	List of goals in the database corresponding
+					to the category.
 		"""
-		query = f"SELECT goal FROM {self.name} where category=?"
-		t = (category,)
-		
-		self.cursor.execute(query, t)
-		return {data[0] for data in self.cursor.fetchall()}
-		
-		
-	# def query_all(self):
-		# """
-		# Gets all entries of the database.
-		# """
-		# query = f"SELECT * FROM {self.db.name}"
-		# self.db.cursor.execute(query)
-		# return self.db.cursor.fetchall()
-		
+		return [g.goal for g in self.session.query(Goal).\
+				filter_by(category=category)]
 	

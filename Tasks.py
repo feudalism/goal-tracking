@@ -10,7 +10,7 @@ class Tasks(object):
 		"""
 		Initialises a task with the goal as the parent of the tree.
 		"""
-		self.root = Node(goal)
+		self.root = Node("Goal: " + goal)
 		
 	def add(self, task, parent=None):
 		if parent is None:

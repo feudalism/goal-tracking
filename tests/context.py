@@ -8,6 +8,7 @@ import worksheet
 
 from GoalsDb import GoalsDb
 from Tasks import Tasks
+from models import *
 
 from test_aux import *
 
