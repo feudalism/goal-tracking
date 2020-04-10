@@ -7,7 +7,7 @@ import db
 import worksheet
 
 from GoalsDb import GoalsDb
-from Tasks import Tasks
+from TaskTree import TaskTree
 from models import *
 
 from test_aux import *

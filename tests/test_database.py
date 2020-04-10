@@ -2,6 +2,12 @@ from context import *
 
 import unittest
 import os
+import shutil
+import datetime
+
+EMPTY_DB_FILEPATH = "test.db"
+NONEMPTY_DB_FILEPATH = "test_nonempty.db"
+TASKS_FILEPATH = "test_tasks.db"
 
 class TestEmptyDatabase(unittest.TestCase):
 	"""
@@ -16,12 +22,11 @@ class TestEmptyDatabase(unittest.TestCase):
 		of the new database.
 		"""
 		# Variables
-		name = "goals"
-		self.filepath = os.path.join(REL_DIR, "test.db")
+		self.filepath = os.path.join(REL_DIR, EMPTY_DB_FILEPATH)
 		
 		# Pre
 		remove_file(self.filepath)
-		self.db = GoalsDb(name, self.filepath)	
+		self.db = GoalsDb(self.filepath)	
 	
 	def test_create_db(self):
 		"""
@@ -35,6 +40,7 @@ class TestEmptyDatabase(unittest.TestCase):
 		"""
 		goal = Goal(goal="Have 1M in savings.",
 				category="Finance")
+		print(goal)
 		self.db.add_goal(goal)
 		
 		self.assertTrue(self.db.is_contains_goal(goal.goal))
@@ -56,6 +62,10 @@ class TestEmptyDatabase(unittest.TestCase):
 		
 		self.assertTrue(self.db.is_contains_goal(goaldata2.goal))
 		
+		# Save for non-empty database
+		shutil.copy(self.filepath, NONEMPTY_DB_FILEPATH)
+		shutil.copy(self.filepath, TASKS_FILEPATH)
+		
 class TestNonEmptyDatabase(unittest.TestCase):
 	"""
 	Tests the functionality of the GoalsDb class
@@ -63,19 +73,18 @@ class TestNonEmptyDatabase(unittest.TestCase):
 	"""
 	
 	@classmethod
-	def setUpClass(self):
+	def setUpClass(self, filepath=NONEMPTY_DB_FILEPATH):
 		"""
 		Instantiates a test database with an empty table.
 		Any existing test databases are removed before creation
 		of the new database.
 		"""
 		# Variables
-		name = "goals"
-		self.filepath = os.path.join(REL_DIR, "test_nonempty.db")
+		self.filepath = os.path.join(REL_DIR, filepath)
 		
 		# Pre
 		make_backup(self.filepath)
-		self.db = GoalsDb(name, self.filepath)
+		self.db = GoalsDb(self.filepath)
 		
 	def get_first_goal(self):
 		"""
@@ -122,25 +131,62 @@ class TestTasks(TestNonEmptyDatabase):
 	
 	@classmethod 
 	def setUpClass(self):
-		super().setUpClass()	
+		self.filepath = os.path.join(REL_DIR, TASKS_FILEPATH)
+		self.db = GoalsDb(self.filepath)
+		# pass
+		# super().setUpClass(TASKS_FILEPATH)
 		
-	def test_define_task(self):
-		goal = self.get_first_goal()
-		task = Tasks(goal.goal)
-		t1 = task.add("Start saving up.")
-		t2 = task.add("Invest.")
+	def get_first_task(self):
+		"""
+		Retrieves the first task object from the database.
 		
-		t11 = task.add("Don't buy sweets.", parent=t1)
+		Returns:	First goal object from the database.
+		"""
+		return self.db.session.query(Task)[0]
 		
-		print()
-		task.print()
+	def test_add_task(self):
+		random_goal = self.get_first_goal()
 		
-	def test_add_task_to_goal(self):
-		pass
+		date = datetime.date(2030, 1, 1)
+		task1 = "Spend less."
+		task2 = "Cook more."
+		
+		self.db.add_task_to_goal(task1, random_goal, deadline=date)
+		self.db.add_task_to_goal(task2, random_goal)
+		
+		self.assertTrue(self.db.is_contains_task(task1))
+		self.assertTrue(self.db.is_contains_task(task2))
+		
+	def test_add_subtasks(self):
+		random_task = self.get_first_task()
+		
+		t_hulu = "Cancel Hulu."
+		tt_hulu = "Check when Hu. subscription ends."
+		t_dropbox = "Cancel Dropbox."
+		tt_dropbox = "Check when subscription ends."
+		
+		t_hulu_obj = self.db.add_subtask_to_task(t_hulu, random_task)
+		self.db.add_subtask_to_task("Cancel Netflix.", random_task)
+		t_dropbox_obj = self.db.add_subtask_to_task(t_dropbox, random_task)
+		
+		self.db.add_subtask_to_task(tt_hulu, t_hulu_obj)
+		self.db.add_subtask_to_task(tt_dropbox, t_dropbox_obj)
+		
+		self.assertTrue(self.db.is_contains_task(t_hulu))
+		self.assertTrue(self.db.is_contains_task(tt_hulu))
+		self.assertTrue(self.db.is_contains_task(t_dropbox))
+		self.assertTrue(self.db.is_contains_task(tt_dropbox))
+		
+	def test_print_tasktree(self):
+		random_goal = self.get_first_goal()
+		tasks = self.db.query_tasks_by_goal(random_goal)
+		tt = TaskTree(tasks)
 		
 	@classmethod
 	def tearDownClass(self):
-		super().tearDownClass()
+		pass
+		# shutil.copy(self.filepath, "test_tasks_view.db")
+		# super().tearDownClass()
 	
 		
 		
@@ -148,8 +194,8 @@ if __name__ == '__main__':
 	# unittest.main()	
 	
 	suite = unittest.TestSuite()
-	# addtests(suite, TestEmptyDatabase)
-	# addtests(suite, TestNonEmptyDatabase)
+	addtests(suite, TestEmptyDatabase)
+	addtests(suite, TestNonEmptyDatabase)
 	addtests(suite, TestTasks)
 	
 	runner = unittest.TextTestRunner(verbosity=2)
