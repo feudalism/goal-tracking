@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block content %}	
+	<!-- <div class="content-section"> -->
+		<form method="POST" action="">
+			{{ form.hidden_tag() }}
+			
+			<fieldset class="form-group">
+				<legend class="border-bottom mb-4">Log expenses</legend>
+    
+                {% for field in form %}
+                    <div class="form-group">
+                        <!-- Labels -->
+                        {% if (field.name != 'submit') and (field.name != 'csrf_token') %}
+                            {{ field.label(class="form-control-label") }}
+                        {% endif %}
+                        
+                        
+                        {% if field.name == 'date' %}
+                            <!-- Date picker -->
+                            {{ form.date(class="form-control form-control-lg", type="date") }}
+                        {% elif field.name == 'submit' %}
+                            <!-- Submit button -->
+                            {{ form.submit(class="btn btn-outline-info") }}
+                        {% else %}
+                            <!-- Form field -->
+                            {% if field.errors %}
+                                {{ field(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for errors in field.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ field(class="form-control form-control-lg") }}
+                            {% endif %}  
+                        
+                        {% endif %}
+                                          
+                    </div>
+                {% endfor %}
+                
+			</fieldset>
+			
+		</form>
+	
+    
+    <!-- </div>	 -->
+    
+    
+
+    <!-- Logger category javascript -->
+    {% block logger_js %}
+        <script>            
+            // loads subcategories on change of categories
+            var cat_select = document.getElementById('cat');
+            var subcat_select = document.getElementById('subcat');
+            
+            cat_select.onchange = function(){
+                cat = cat_select.value;
+                fetch('/subcat/' + cat).then( function(response){
+                    response.json().then( function(data){
+                        var optionHTML = '';
+                        for (var subcat of data.subcategories) {
+                            optionHTML += '<option value="' + subcat.id + '">' + subcat.name + '</option>';
+                            }
+                        subcat_select.innerHTML = optionHTML;
+                        })
+                    });
+                };
+        </script>
+        
+        <script>    
+            // auto loads subcategories
+            (function(){
+                var cat = document.getElementById('cat').value;
+                var subcat_select = document.getElementById('subcat');
+                
+                fetch('/subcat/' + cat).then( function(response){
+                    response.json().then( function(data){
+                        var optionHTML = '';
+                        for (var subcat of data.subcategories) {
+                            optionHTML += '<option value="' + subcat.id + '">' + subcat.name + '</option>';
+                            }
+                        subcat_select.innerHTML = optionHTML;
+                        })
+                    });
+                })();
+        </script>
+    {% endblock logger_js %}
+    
+{% endblock content %}

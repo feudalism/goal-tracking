@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block content %}	    
+    
+    <!-- Dynamic table CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>  
+    
+    
+    <h2>Table of expenses</h2>
+    <p></p>
+    
+    <!-- <div class="form-inline"> -->
+        <!-- <div class="form-group"> -->
+            <!-- <label class="form-control-label">Filter by:</label> -->
+            <!-- <select class="form-control" id="cat" name="cat" required> -->
+                <!-- <option value="Clothes">Clothes</option> -->
+            <!-- </select> -->
+        <!-- </div> -->
+    <!-- </div> -->
+    
+    <button class="btn btn-outline-info"
+        type="button"
+        onclick="prevMonth()">Prev. month</button>
+    
+    <button class="btn btn-outline-info"
+        type="button"
+        onclick="thisMonth()">This month</button>
+    
+    <p>&nbsp;</p>
+    
+    {{ table }}
+    
+    <script>
+        function prevMonth() {
+            var search = document.getElementsByTagName('INPUT')[0];
+            search.value = "{{year}}-{{prevmonth}}"
+        }
+        
+        function thisMonth() {
+            var search = document.getElementsByTagName('INPUT')[0];
+            search.value = "{{year}}-{{month}}"
+            
+            const ke = new KeyboardEvent("keydown", {
+                bubbles: true, cancelable: true, keyCode: 13
+            });
+            document.body.dispatchEvent(ke);
+        }
+    </script>
+    
+    <script>
+    $(document).ready(
+            function () {
+                $('#filtered-table').DataTable( {
+                    "iDisplayLength": 15,
+                    "order": [[ 0, "desc" ]],
+                    "search": {"search":"{{year}}-{{month}}"}
+                } );
+            } );
+    </script>
+    
+{% endblock content %}

@@ -9,6 +9,8 @@ verify_ssl = true
 openpyxl = "*"
 anytree = "*"
 sqlalchemy = "*"
+flask = "*"
+flask-sqlalchemy = "*"
 
 [requires]
 python_version = "3.7"

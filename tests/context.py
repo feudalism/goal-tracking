@@ -10,6 +10,8 @@ from GoalsDb import GoalsDb
 from TaskTree import TaskTree
 from models import *
 
+from website import website
+
 from test_aux import *
 
 REL_DIR, _ = os.path.split(__file__)
