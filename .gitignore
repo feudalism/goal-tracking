@@ -1,3 +1,4 @@
 *Pipfile.lock
 *.xlsx
 *.txts
+*bootstrap*

@@ -1,7 +1,8 @@
 import sqlite3
 from itertools import compress
 
-from models import *
+from db_creator import *
+from sqlalchemy.orm import sessionmaker
 
 class GoalsDb(object):
 	"""

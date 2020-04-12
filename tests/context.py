@@ -4,13 +4,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import categories
 import db
+import website
 import worksheet
 
 from GoalsDb import GoalsDb
 from TaskTree import TaskTree
 from models import *
-
-from website import website
 
 from test_aux import *
 

@@ -1,40 +1,33 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from db_setup import db
 
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-
-Base = declarative_base()
-
-class Goal(Base):
+class Goal(db.Model):
 	__tablename__ = 'goals'
 	
-	id = Column(Integer, primary_key=True)
-	goal = Column(String, unique=True, nullable=False)
-	category = Column(String, nullable=False)
-	deadline = Column(DateTime, nullable=True)
+	id = db.Column(db.Integer, primary_key=True)
+	goal = db.Column(db.String, unique=True, nullable=False)
+	category = db.Column(db.String, nullable=False)
+	deadline = db.Column(db.DateTime, nullable=True)
 	
 	# One-to-many G > T*
-	tasks = relationship("Task", back_populates="goal")
+	tasks = db.relationship("Task", back_populates="goal")
 	
 	def __repr__(self):
 		return f"<GOAL {self.id}: \'{self.goal}\' [{self.category}]>"
 		
-class Task(Base):
+class Task(db.Model):
 	__tablename__ = 'tasks'
 	
-	id = Column(Integer, primary_key=True)
-	task = Column(String, nullable=False)
-	deadline = Column(DateTime, nullable=True)
+	id = db.Column(db.Integer, primary_key=True)
+	task = db.Column(db.String, nullable=False)
+	deadline = db.Column(db.DateTime, nullable=True)
 	
 	# One-to-many G > T*
-	goal_id = Column(Integer, ForeignKey('goals.id'))
-	goal = relationship("Goal", back_populates="tasks")
+	goal_id = db.Column(db.Integer, db.ForeignKey('goals.id'))
+	goal = db.relationship("Goal", back_populates="tasks")
 	
 	# One-to-many T > ST*
-	parent_id = Column(Integer)
-	child_id = Column(Integer)
+	parent_id = db.Column(db.Integer)
+	child_id = db.Column(db.Integer)
 	
 	def __repr__(self):
 		return f"<TASK \'{self.task}\'>"

@@ -17,7 +17,7 @@ class TestWebsite(unittest.TestCase):
 		# self.db = GoalsDb(self.filepath)
 		
 	def test_web_launch(self):
-		website.init_app(DB_FILEPATH)
+		website.app.init(DB_FILEPATH)
 		
 		
 if __name__ == '__main__':
