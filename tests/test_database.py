@@ -1,13 +1,11 @@
 from context import *
 
 import unittest
-import os
 import shutil
-import datetime
 
-EMPTY_DB_FILEPATH = "test.db"
-NONEMPTY_DB_FILEPATH = "test_nonempty.db"
-TASKS_FILEPATH = "test_tasks.db"
+EMPTY_DB_FILEPATH = abs_path("test.db")
+NONEMPTY_DB_FILEPATH = abs_path("test_nonempty.db")
+TASKS_FILEPATH = abs_path("test_tasks.db")
 
 class TestEmptyDatabase(unittest.TestCase):
 	"""
@@ -21,18 +19,17 @@ class TestEmptyDatabase(unittest.TestCase):
 		Any existing test databases are removed before creation
 		of the new database.
 		"""
-		# Variables
-		self.filepath = os.path.join(REL_DIR, EMPTY_DB_FILEPATH)
-		
-		# Pre
-		remove_file(self.filepath)
-		self.db = GoalsDb(self.filepath)	
+		self.filepath = EMPTY_DB_FILEPATH
+		self.db = GoalsDb(self.filepath)		
 	
 	def test_create_db(self):
 		"""
 		Tests the creation of an empty database.
 		"""
 		self.assertTrue(file_exists(self.filepath))
+		
+		# Save empty database
+		shutil.copy(self.filepath, abs_path("test_empty.db"))
 		
 	def test_add_one_goal(self):
 		"""
@@ -50,11 +47,11 @@ class TestEmptyDatabase(unittest.TestCase):
 		Tests addition of multiple goals to the database.
 		"""
 		goal1 = "Have 1M in savings."
-		goal2 = "Have 2M in savings."
+		goal2 = "Graduate with 1.0 CGPA."
 		goal3 = "Eat healthier."
 		
 		goaldata1 = Goal(goal=goal1, category="Finance")
-		goaldata2 = Goal(goal=goal2, category="Finance")
+		goaldata2 = Goal(goal=goal2, category="Uni")
 		goaldata3 = Goal(goal=goal3, category="Health")
 		
 		goals_to_add = [goaldata1, goaldata2, goaldata3]
@@ -62,10 +59,14 @@ class TestEmptyDatabase(unittest.TestCase):
 		
 		self.assertTrue(self.db.is_contains_goal(goaldata2.goal))
 		
-		# Save for non-empty database
+		# Save for non-empty databases
 		shutil.copy(self.filepath, NONEMPTY_DB_FILEPATH)
 		shutil.copy(self.filepath, TASKS_FILEPATH)
 		
+	def tearDown(self):
+		del self.db
+		remove_file(self.filepath)
+			
 class TestNonEmptyDatabase(unittest.TestCase):
 	"""
 	Tests the functionality of the GoalsDb class
@@ -80,7 +81,7 @@ class TestNonEmptyDatabase(unittest.TestCase):
 		of the new database.
 		"""
 		# Variables
-		self.filepath = os.path.join(REL_DIR, filepath)
+		self.filepath = filepath
 		
 		# Pre
 		make_backup(self.filepath)

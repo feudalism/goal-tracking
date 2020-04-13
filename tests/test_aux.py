@@ -1,6 +1,8 @@
 import os
 from shutil import copy, move
 
+REL_DIR, _ = os.path.split(__file__)
+
 def addtests(suite, class_):
 	tests = [class_(k) for k in class_.__dict__ if 'test' in k]
 	suite.addTests(tests)
@@ -22,3 +24,5 @@ def remove_file(filepath):
 	except FileNotFoundError:
 		pass
 		
+def abs_path(file):
+	return os.path.join(REL_DIR, file)

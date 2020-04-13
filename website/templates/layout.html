@@ -13,20 +13,20 @@
 
 <body>
     <header class="site-header">
-		Goal Tracker
+		<a href="{{ url_for('home') }}" class="hdr-link">Goal Tracker</a>
 	</header>
 	
-	<main class="container">
+	<main class="container-fluid">
 		<div class="row">
-			<div class="col-sm">
+			<div class="col col-5">
 				<section class="goals">
 					{% block content %}{% endblock %}
 				</section>
 			</div>
 			
-			<div class="col-sm">
+			<div class="col col-3">
 			<section class="tasks">
-				<h1>Tasks</h1>
+					{% block tasks_content %}{% endblock %}
 			</section>
 			</div>
 		</div>

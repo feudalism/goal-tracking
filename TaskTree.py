@@ -1,6 +1,6 @@
 from anytree import Node, RenderTree
 
-from models import Goal
+from db_creator import Goal
 
 class TaskTree(object):
 	"""

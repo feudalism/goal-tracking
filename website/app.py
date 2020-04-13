@@ -1,18 +1,19 @@
-from flask import Flask
-	
-# Initialise app
+from config import config
 
-def init(filepath):
+from flask import Flask
+
+def create_app(config_name, config_obj=None):
 	"""Creates a Flask app object and sets the database filepath.
-		Creates a database object.
-		Imports the routes to be run on the app.
 		
 	Returns:
 		app	: Flask object
-		db	: SQLAlchemy database
 	"""
 	app = Flask(__name__)
-	print("App instance.")
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + filepath
+	
+	if config_obj is None:
+		config_obj = config[config_name]
+	
+	app.config.from_object(config_obj)
+	config_obj.init_app(app)
 	
 	return app

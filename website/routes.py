@@ -1,48 +1,60 @@
-from db_setup import app
 from models import Goal
 
+from flask import current_app as app
 from flask import render_template, url_for
 from flask_table import Table, Col, LinkCol
 
 class GoalsTable(Table):
 	table_id = "goals_table"
 	allow_sort = True
-
-	def sort_url(self, col_key, reverse=True):
-		if reverse:
-			direction =  'desc'
-		else:
-			direction = 'asc'
-		return url_for('index', sort=col_key, direction=direction)
 	
-	id = Col('Id', show=False)
+	def __init__(self, query_list, sorted_col, sorted_col_dir):
+		super().__init__(query_list)
+		self.sorted_col = sorted_col
+		self.sorted_col_dir = sorted_col_dir
+
+	def sort_url(self, col_key):
+		if col_key == self.sorted_col:
+			if self.sorted_col_dir == 'asc':
+				rev_dir = 'desc'
+			else:
+				rev_dir = 'asc'
+			return url_for('home_sort', col=col_key, dir=rev_dir)
+			
+		elif col_key is 'edit':
+			return ""
+			
+		else:
+			return url_for('home_sort', col=col_key, dir='asc')
+	
+	id = Col('Id')
 	goal = Col('Goal')
 	category = Col('Category')
 	deadline = Col('Deadline', show=False)
-	edit = LinkCol('View', 'edit', url_kwargs=dict(id='id'))
+	view = LinkCol('View', 'view', url_kwargs=dict(id='id'),
+			th_html_attrs={'font-weight': 'bold'})
 	
-def generate_table():
-	goals = Goal.query.order_by( Goal.deadline.asc() )
+def generate_table(col='id', dir='asc'):
+	order_eval = eval(f"Goal.{col}.{dir}()")
+	goals = Goal.query.order_by( order_eval )
+		
+	return GoalsTable(goals,
+				sorted_col = col,
+				sorted_col_dir = dir)
 	
-	query_dict = {}
-	query_list = []
-	for g in goals:
-		query_dict['id'] = g.id
-		query_dict['goal'] = g.goal
-		query_dict['category'] = g.category
-		
-		query_list.append(query_dict)
-		query_dict = {}
-		
-	return GoalsTable(query_list)
-		
+
 @app.route("/")
-def index():
+def home():
 	goals_table = generate_table()
-	return render_template('dashboard.html', table=goals_table)
+	return render_template('home.html', table=goals_table)
+	
+@app.route("/?sort=<string:col>&dir=<string:dir>")
+def home_sort(col, dir):
+	goals_table = generate_table(col, dir)
+	return render_template('home.html', table=goals_table)
 	
 @app.route("/item/<int:id>", methods=['GET', 'POST'])
-def edit(id=id):
+def view(id=id):
 	goal_obj = Goal.query.filter( Goal.id == id ).first()
 	goal = goal_obj.goal
 	return render_template('goal.html', goal=goal)

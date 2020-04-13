@@ -1,11 +1,11 @@
 from context import *
 
 import unittest
-import os
 import shutil
 import datetime
 
-TASKS_FILEPATH = "test_tasks.db"
+TASKS_FILEPATH = abs_path("test_tasks.db")
+WEBSITE_DB = abs_path("test_website.db")
 
 class TestTasks(unittest.TestCase):
 	"""Tests the functionality of the Tasks class,
@@ -14,54 +14,79 @@ class TestTasks(unittest.TestCase):
 	
 	@classmethod 
 	def setUpClass(self):
-		self.filepath = os.path.join(REL_DIR, TASKS_FILEPATH)
+		self.filepath = TASKS_FILEPATH
+		
+		make_backup(self.filepath)
 		self.db = GoalsDb(self.filepath)
 		
-	def get_first_task(self):
+	def get_goal(self, id=1):
+		"""
+		Retrieves the first goal object from the database.
+		
+		Returns:	First goal object from the database.
+		"""
+		return self.db.session.query(Goal)[id-1]
+		
+	def get_task(self, id=1):
 		"""
 		Retrieves the first task object from the database.
 		
 		Returns:	First goal object from the database.
 		"""
-		return self.db.session.query(Task)[0]
+		return self.db.session.query(Task)[id-1]
 		
 	def test_add_task(self):
-		random_goal = self.get_first_goal()
+		g_1m = self.get_goal(1)
+		g_study = self.get_goal(2)
 		
 		date = datetime.date(2030, 1, 1)
-		task1 = "Spend less."
-		task2 = "Cook more."
+		t_spend = "Spend less."
+		t_cook = "Cook more."
+		t_study = "Study for DSV exam."
 		
-		self.db.add_task_to_goal(task1, random_goal, deadline=date)
-		self.db.add_task_to_goal(task2, random_goal)
+		self.db.add_task_to_goal(t_spend, g_1m, deadline=date)
+		self.db.add_task_to_goal(t_cook, g_1m)
+		self.db.add_task_to_goal(t_study, g_study)
 		
-		self.assertTrue(self.db.is_contains_task(task1))
-		self.assertTrue(self.db.is_contains_task(task2))
+		self.assertTrue(self.db.is_contains_task(t_spend))
+		self.assertTrue(self.db.is_contains_task(t_cook))
+		self.assertTrue(self.db.is_contains_task(t_study))
 		
 	def test_add_subtasks(self):
-		random_task = self.get_first_task()
+		task1 = self.get_task(1)
+		task2 = self.get_task(2)
 		
 		t_hulu = "Cancel Hulu."
 		tt_hulu = "Check when Hu. subscription ends."
+		t_netflix = "Cancel Netflix."
 		t_dropbox = "Cancel Dropbox."
 		tt_dropbox = "Check when subscription ends."
 		
-		t_hulu_obj = self.db.add_subtask_to_task(t_hulu, random_task)
-		self.db.add_subtask_to_task("Cancel Netflix.", random_task)
-		t_dropbox_obj = self.db.add_subtask_to_task(t_dropbox, random_task)
-		
-		self.db.add_subtask_to_task(tt_hulu, t_hulu_obj)
-		self.db.add_subtask_to_task(tt_dropbox, t_dropbox_obj)
+		hulu_tobj = self.db.add_subtask_to_task(t_hulu, task1)
+		self.db.add_subtask_to_task(tt_hulu, hulu_tobj)
+		self.db.add_subtask_to_task(t_netflix, task1)
+		dropbox_tobj = self.db.add_subtask_to_task(t_dropbox, task1)
+		self.db.add_subtask_to_task(tt_dropbox, dropbox_tobj)
 		
 		self.assertTrue(self.db.is_contains_task(t_hulu))
 		self.assertTrue(self.db.is_contains_task(tt_hulu))
+		self.assertTrue(self.db.is_contains_task(t_netflix))
 		self.assertTrue(self.db.is_contains_task(t_dropbox))
 		self.assertTrue(self.db.is_contains_task(tt_dropbox))
 		
 	def test_print_tasktree(self):
-		random_goal = self.get_first_goal()
+		random_goal = self.get_goal(1)
 		tasks = self.db.query_tasks_by_goal(random_goal)
 		tt = TaskTree(tasks)
+		
+	@classmethod
+	def tearDownClass(self):
+		"""
+		Resets the non-empty database.
+		"""
+		shutil.copy(self.filepath, WEBSITE_DB)
+		restore_backup(self.filepath)
+		
 		
 if __name__ == '__main__':
 	# unittest.main()	
