@@ -2,3 +2,5 @@
 *.xlsx
 *.txts
 *bootstrap*
+*~
+*.swp
