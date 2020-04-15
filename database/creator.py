@@ -1,8 +1,7 @@
-from sqlalchemy import create_engine
-
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import create_engine
 
 Base = declarative_base()
 
@@ -39,5 +38,7 @@ class Task(Base):
 		return f"<TASK \'{self.task}\'>"
 		
 def create_tables(filepath):
+	"""Creates a database with tables at the filepath,
+		if none pre-existing."""
 	engine = create_engine('sqlite:///' + filepath)
 	Base.metadata.create_all(engine)

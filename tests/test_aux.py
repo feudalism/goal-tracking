@@ -1,3 +1,4 @@
+# Helper functions for the test suites
 import os
 from shutil import copy, move
 
@@ -9,6 +10,12 @@ def addtests(suite, class_):
 	
 def file_exists(filepath):
 	return os.path.isfile(filepath)
+		
+def abs_path(filepath):
+	return os.path.join(REL_DIR, filepath)
+	
+def duplicate(src_filepath, dst_filepath):
+	copy(src_filepath, dst_filepath)
 	
 def make_backup(src_filepath):
 	dst_filepath = src_filepath + "temp"
@@ -23,6 +30,3 @@ def remove_file(filepath):
 		os.remove(filepath)
 	except FileNotFoundError:
 		pass
-		
-def abs_path(file):
-	return os.path.join(REL_DIR, file)

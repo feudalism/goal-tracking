@@ -1,96 +1,74 @@
 from context import *
 
 import unittest
-import shutil
 import datetime
 
 TASKS_FILEPATH = abs_path("test_tasks.db")
-WEBSITE_DB = abs_path("test_website.db")
 
 class TestTasks(unittest.TestCase):
-	"""Tests the functionality of the Tasks class,
-		using a non-empty database as a starting point.
-	"""
+	"""Tests the functionality of the Tasks and TaskTree classes,
+		using a non-empty database as a starting point."""
 	
 	@classmethod 
 	def setUpClass(self):
+		"""Initialises database for testing tasks."""
 		self.filepath = TASKS_FILEPATH
-		
 		make_backup(self.filepath)
-		self.db = GoalsDb(self.filepath)
+		self.db = Database(self.filepath)
 		
-	def get_goal(self, id=1):
-		"""
-		Retrieves the first goal object from the database.
-		
-		Returns:	First goal object from the database.
-		"""
-		return self.db.session.query(Goal)[id-1]
-		
-	def get_task(self, id=1):
-		"""
-		Retrieves the first task object from the database.
-		
-		Returns:	First goal object from the database.
-		"""
-		return self.db.session.query(Task)[id-1]
+	def gen_tree(self, goal):
+		"""Generates the task tree for a given goal."""
+		tasks = self.db.get_children(goal)
+		return TaskTree(tasks, goal, do_print=True)
 		
 	def test_add_task(self):
-		g_1m = self.get_goal(1)
-		g_study = self.get_goal(2)
+		"""Tests adding a tasks to a goal."""
+		g_1m = self.db.query_goal_id(1)
+		g_study = self.db.query_goal_id(2)
 		
 		date = datetime.date(2030, 1, 1)
-		t_spend = "Spend less."
-		t_cook = "Cook more."
-		t_study = "Study for DSV exam."
 		
-		self.db.add_task_to_goal(t_spend, g_1m, deadline=date)
-		self.db.add_task_to_goal(t_cook, g_1m)
-		self.db.add_task_to_goal(t_study, g_study)
+		t_spend = self.db.add_task("Spend less.", g_1m, deadline=date)
+		t_cook = self.db.add_task("Invest.", g_1m)
+		t_study = self.db.add_task("Study for DSV exam.", g_study)
 		
-		self.assertTrue(self.db.is_contains_task(t_spend))
-		self.assertTrue(self.db.is_contains_task(t_cook))
-		self.assertTrue(self.db.is_contains_task(t_study))
+		self.assertTrue(self.db.contains_task(t_spend))
+		self.assertTrue(self.db.contains_task(t_cook))
+		self.assertTrue(self.db.contains_task(t_study))
 		
 	def test_add_subtasks(self):
-		task1 = self.get_task(1)
-		task2 = self.get_task(2)
+		"""Tests adding subtasks to a parent task."""
+		task1 = self.db.query_task_id(1)
 		
-		t_hulu = "Cancel Hulu."
-		tt_hulu = "Check when Hu. subscription ends."
-		t_netflix = "Cancel Netflix."
-		t_dropbox = "Cancel Dropbox."
-		tt_dropbox = "Check when subscription ends."
+		t_netflix = self.db.add_task("Cancel Netflix.", task1)
+		t_dropbox = self.db.add_task("Cancel Dropbox.", task1)
+		tt_dropbox = self.db.add_task("Check when subscription ends.", t_dropbox)
 		
-		hulu_tobj = self.db.add_subtask_to_task(t_hulu, task1)
-		self.db.add_subtask_to_task(tt_hulu, hulu_tobj)
-		self.db.add_subtask_to_task(t_netflix, task1)
-		dropbox_tobj = self.db.add_subtask_to_task(t_dropbox, task1)
-		self.db.add_subtask_to_task(tt_dropbox, dropbox_tobj)
-		
-		self.assertTrue(self.db.is_contains_task(t_hulu))
-		self.assertTrue(self.db.is_contains_task(tt_hulu))
-		self.assertTrue(self.db.is_contains_task(t_netflix))
-		self.assertTrue(self.db.is_contains_task(t_dropbox))
-		self.assertTrue(self.db.is_contains_task(tt_dropbox))
+		self.assertTrue(self.db.contains_task(t_netflix))
+		self.assertTrue(self.db.contains_task(t_dropbox))
+		self.assertTrue(self.db.contains_task(tt_dropbox))
 		
 	def test_print_tasktree(self):
-		random_goal = self.get_goal(1)
-		tasks = self.db.query_tasks_by_goal(random_goal)
-		tt = TaskTree(tasks)
+		"""Tests functionality of the TaskTree class."""
+		goal = self.db.query_goal_id(1)
+		tree = self.gen_tree(goal)
+		
+		self.assertIsNotNone(tree)
+		
+	def test_tree_to_dict(self):
+		"""Tests converting the task tree to an ordered dict."""
+		goal = self.db.query_goal_id(1)
+		tree = self.gen_tree(goal)
+		d = tree.to_dict()
+		self.assertIsNotNone(d)
 		
 	@classmethod
 	def tearDownClass(self):
-		"""
-		Resets the non-empty database.
-		"""
-		shutil.copy(self.filepath, WEBSITE_DB)
+		"""Resets the non-empty database."""
 		restore_backup(self.filepath)
 		
 		
 if __name__ == '__main__':
-	# unittest.main()	
-	
 	suite = unittest.TestSuite()
 	addtests(suite, TestTasks)
 	

@@ -1,15 +1,44 @@
 {% extends "layout.html" %}
 
-{% block content %}	    
+{% block content %}	     
+    <h1>List of goals</h1>
+	{{ table }}
+{% endblock content %}
+
+{% block tasks_content %}	 
     <h1>Goal</h1><p>
 	<h2>{{ goal }}</h2>
 	<p>
-	<a href="javascript:history.back()">Back</a>
-{% endblock content %}
-
-{% block tasks_content %}	    
-    <h1>Tasks</h1><p>
-	<h2>{{ goal }}</h2>
+	&nbsp;
 	<p>
+	<!-- <a href="javascript:history.back()">Back</a>   -->
+    <h1>Tasks</h1><p>	
+	<!-- <table border="1px solid black" border="0"> -->
+		<!-- {% for child in tasks['children'] recursive %} -->
+		<!-- <tr colspan="2"> -->
+			<!-- <td> -->
+			<!-- {{ child['name'] }} -->
+			<!-- </td> -->
+		<!-- </tr> -->
+			<!-- {% if child['children'] %} -->
+				<!-- {{ loop(child['children']) }} -->
+			<!-- {% endif %} -->
+		<!-- {% endfor %} -->
+		
+		<!-- <tr> -->
+			<!-- <td> -->
+			<ul>
+			{% for child in tasks['children'] recursive %}
+				<li> {{ child['name'] }}
+					{% if child['children'] %}
+						<ul>
+							{{ loop(child['children']) }}
+						</ul>
+					{% endif %}
+			{% endfor %}
+			</ul>
+			<!-- </td> -->
+		<!-- </tr> -->
+	<!-- </table> -->
 	<a href="javascript:history.back()">Back</a>
 {% endblock tasks_content %}

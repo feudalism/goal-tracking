@@ -1,56 +1,6 @@
 from context import *
 
 import unittest
-import os, time
-from shutil import copy, move
-	
-def addtests(suite, class_):
-	tests = [class_(k) for k in class_.__dict__ if 'test' in k]
-	suite.addTests(tests)
-
-class TestDatabase(unittest.TestCase):
-	@classmethod
-	def setUpClass(self):
-		filename = 'test.db'
-		
-		self.filepath = os.path.join(REL_DIR, filename)
-		self.data = (('goal1', 'cat1'), ('goal2', 'cat2'))
-		self.newdata_one = (('goal5', 'cat1'))
-	
-	def setUp(self):
-		self.db = db.init_db(self.filepath)
-		self.cursor, _ = self.db
-		self.assertTrue(self.check_exist)
-		
-		db.data_entry(self.data, self.db)
-		
-	def check_exist(self):
-		return os.path.isfile(self.filepath)
-		
-	def check_goals_added(self, newdata):
-		self.assertTrue(db.is_goals_added(self.db, newdata))
-		
-	def test_create_db(self):
-		self.check_goals_added(self.data)
-		
-	def test_append_existing_goals(self):
-		db.data_entry(self.data, self.db)
-		self.check_goals_added(self.data)
-			
-	def test_append_new_data(self):
-		newdata = (('goal3', 'cat1'), ('goal4', 'cat2'))
-		db.data_entry(newdata, self.db)
-		self.check_goals_added(newdata)
-			
-	def test_append_new_data_single(self):
-		newdata = ('goal5', 'cat1')
-		db.data_entry(newdata, self.db)
-		self.check_goals_added(newdata)
-		
-	def tearDown(self):
-		db.close(self.db)
-		os.remove(self.filepath)
-		self.assertFalse(self.check_exist())
 
 class TestCategories(unittest.TestCase):	
 	"""
@@ -177,7 +127,6 @@ if __name__ == '__main__':
 	# unittest.main()	
 	
 	suite = unittest.TestSuite()
-	addtests(suite, TestDatabase)
 	addtests(suite, TestCategories)
 	addtests(suite, TestWorksheet)
 	addtests(suite, TestGoalRemoval)

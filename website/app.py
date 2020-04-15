@@ -1,14 +1,18 @@
 from config import config
 
+import os
 from flask import Flask
 
-def create_app(config_name, config_obj=None):
+REL_DIR = os.path.dirname(__file__)
+
+def create_app(config_name='default', config_obj=None):
 	"""Creates a Flask app object and sets the database filepath.
 		
 	Returns:
 		app	: Flask object
 	"""
-	app = Flask(__name__)
+	app = Flask(config_name)
+	app.root_path = REL_DIR
 	
 	if config_obj is None:
 		config_obj = config[config_name]

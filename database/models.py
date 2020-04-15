@@ -1,4 +1,4 @@
-from db_setup import db
+from .setup import db
 
 class Goal(db.Model):
 	__tablename__ = 'goals'
